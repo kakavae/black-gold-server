@@ -1,7 +1,10 @@
 const express = require('express')
+// 导入操作数据库的模块
+const db = require('../db/index.js')
 
 const router = express()
 
+/* 拿着token获取用户的个人信息 */
 router.get('/userinfo', (req, res) => {
   // 解析用户发送的token，根据结果返回成功或者失败的结果
   // console.log(req.get('Authorization'))

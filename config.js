@@ -1,4 +1,4 @@
 module.exports = {
   jwtSecretKey: 'liangwei No1. ^_^',
-  expiresIn: '10h'
+  expiresIn: '72h'
 }

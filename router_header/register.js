@@ -6,9 +6,12 @@ const db = require('../db/index.js')
 const jwt = require('jsonwebtoken')
 // 导入生成token的密钥和有效期配置
 const config = require('../config.js')
+// 导入UUID生成唯一的ID
+const { v4: uuidv4 } = require('uuid')
 
 // 获取验证码
 const getRegisterCode = async (req, res) => {
+  console.log('请求验证码')
   // 创建 nodemailer 配置
   const transporter = nodemailer.createTransport({
     //支持列表： https://nodemailer.com/smtp/well-known/
@@ -17,13 +20,13 @@ const getRegisterCode = async (req, res) => {
     secureConnection: true,
     auth: {
       user: '3263196640@qq.com',
-      pass: 'zdbxwdsfodbkdaig'
+      pass: 'psnytvtxurhxdbfd'
     }
   })
 
   const email = req.body.email
 
-  console.log(email)
+  // console.log(email)
 
   // 随机生成一个四位数数字
   const code = Math.floor((Math.random() + 1) * 1000)
@@ -42,7 +45,7 @@ const getRegisterCode = async (req, res) => {
     // 需要将本次收到的邮箱和验证码存储在一个服务器里面以便提交注册的时候验证
     // 1.1 先去数据库看有没有这个结果
     const emailResult = await new Promise((resolve, reject) => {
-      db.query(`select * from my_db_02.register_code_email where email = '${email}'`, (err, result) => {
+      db.query(`select * from register_code_email where email = '${email}'`, (err, result) => {
         if (err) {
           reject('验证验证码出错')
         }
@@ -52,9 +55,12 @@ const getRegisterCode = async (req, res) => {
 
     if (emailResult.length < 1) {
       await new Promise((resolve, reject) => {
-        db.query(`INSERT INTO my_db_02.register_code_email (email, code) VALUES ('${email}', '${code}')`, (err, result) => {
+        db.query(`INSERT INTO register_code_email (email, code) VALUES ('${email}', '${code}')`, (err, result) => {
           if (err) {
-            reject(['获取验证码失败'])
+            reject({
+              msg: '存储验证码到数据库中失败',
+              err
+            })
           }
           resolve(result)
         })
@@ -76,7 +82,7 @@ const getRegisterCode = async (req, res) => {
     timer = setTimeout(async () => {
       try {
         const resultSel = await new Promise((resolve, reject) => {
-          db.query(`select * from my_db_02.register_code_email where email = '${email}'`, (err, result) => {
+          db.query(`select * from register_code_email where email = '${email}'`, (err, result) => {
             if (err) {
               reject('验证验证码出错')
             }
@@ -97,7 +103,7 @@ const getRegisterCode = async (req, res) => {
       } catch (e) {
         console.log(e)
       }
-    }, 240000)
+    }, 480000)
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
@@ -108,7 +114,8 @@ const getRegisterCode = async (req, res) => {
       // console.log('邮件发送成功 ID：', info.messageId)
       res.send({
         code: 200,
-        message: info.messageId,
+        message: info,
+        data: '验证码发送成功请在邮箱查看',
         ok: true
       })
     })
@@ -119,58 +126,85 @@ const getRegisterCode = async (req, res) => {
   console.log('res.send后面执行的代码')
 }
 
-// 注册成功的接口
+// 注册成功的接口---注册成功就直接登录并返回token
 const getRegister = async (req, res) => {
   // 拿着发送过来的数据去数据库查找邮箱，如果验证码正确了，就注册成功
-  const { email, password, code } = req.body
+  const { email, code } = req.body
+  const userId = uuidv4()
+  const userName = 'user' + userId
 
   try {
     // 1. 从已经注册的表里面查看是否有数据，
     const userInfo = await new Promise((resolve, reject) => {
-      db.query(`select * from my_db_02.register_user where email = '${email}'`, (err, result) => {
+      db.query(`select * from register_user where email = '${email}'`, (err, result) => {
         if (err) {
-          reject('验证验证码出错')
+          reject('服务器首次查询用户信息出错')
         }
         resolve(result)
       })
     })
 
-    // 1.1有数据就不用再注册了
+    // 1.1有数据就不用再注册了 --- 直接判断验证码是否一致然后登录
+    /* 这时候需要重新根据数据库里面查到的email和username重新生成一遍token发给客户端 */
     if (userInfo.length > 0) {
+      const user = { ...userInfo[0] }
+      const token = jwt.sign(user, config.jwtSecretKey, { expiresIn: config.expiresIn })
+
       res.send({
         code: 200,
-        message: '您已经注册过了，请选择登录或者修改密码',
-        ok: true,
-        register: true
+        message: '您已经注册过了，已直接为您登录',
+        data: {
+          id: user.id,
+          nickname: user.userName,
+          userName: user.userName,
+          token: `Bearer ${token}`,
+          ok: true,
+          result: userInfo
+        }
       })
       return
     }
 
-    // 1.2没有数据就去查验证码是否正确，如果正确就成功注册
+    // 1.2没有数据就去查验证码是否正确，如果正确就成功注册---走到这里说明上面查到的是空数据
     const emailInfo = await new Promise((resolve, reject) => {
-      db.query(`select * from my_db_02.register_code_email where email = '${email}'`, (err, result) => {
+      db.query(`select * from register_code_email where email = '${email}'`, (err, result) => {
         if (err) {
-          reject('验证验证码出错')
+          reject('查询验证码数据库出错')
         }
         resolve(result)
       })
     })
 
-    // 注册成功以后将邮箱和密码保存在已注册用户的表中
+    // 1.3注册成功以后将邮箱和密码保存在已注册用户的表中并返回token
     if (emailInfo.length > 0 && emailInfo[0].code === code) {
       const registerResult = await new Promise((resolve, reject) => {
-        db.query(`insert into my_db_02.register_user (email, password) values ('${email}', '${password}')`, (err, result) => {
+        db.query(`insert into register_user (id, email, userName) values ('${userId}', '${email}', '${userName}')`, (err, result) => {
           if (err) {
-            reject('注册用户失败，请重试')
+            reject({
+              msg: '注册用户失败，请重试',
+              err
+            })
           }
           resolve(result)
         })
       })
+
+      /* 生成token并返回 */
+      const user = { userName, email, id: userId }
+      const token = jwt.sign(user, config.jwtSecretKey, { expiresIn: config.expiresIn })
+
+      // 2. 将所有的信息发送给客户端
       res.send({
         code: 200,
-        message: registerResult,
-        ok: true,
-        data: null
+        message: '注册并登录成功',
+        data: {
+          id: userId,
+          userName: userName,
+          email,
+          token: `Bearer ${token}`,
+          ok: true,
+          result: registerResult
+        }
       })
     } else {
       res.cc('验证码失效')
@@ -180,7 +214,8 @@ const getRegister = async (req, res) => {
   }
 }
 
-// 用户登录的接口
+/*
+// 用户登录的接口----不需要
 const getLogin = async (req, res) => {
   const { email, password } = req.body
   const result = await new Promise((resolve, reject) => {
@@ -219,20 +254,53 @@ const getLogin = async (req, res) => {
     })
   }
 }
+*/
 
-// 退出登录的接口
-const getLogout = (req, res) => {
-  res.send({
-    code: 200,
-    message: '退出登录成功',
-    data: null,
-    ok: true
-  })
+/* 退出登录的接口 */
+/* 退出登录，在数据库表中删除用户的信息，返回成功删除的信息 */
+const getLogout = async (req, res) => {
+  const userid = req.params.userid
+  console.log(userid)
+  try {
+    // 1. 从已经注册的表里面查看是否有数据，
+    const userInfo = await new Promise((resolve, reject) => {
+      db.query(`select * from register_user where id = '${userid}'`, (err, result) => {
+        if (err) {
+          reject('查数据库出错1')
+        }
+        resolve(result)
+      })
+    })
+    if (userInfo.length > 0) {  // 确实注册了用户
+      const deleteInfo = await new Promise((resolve, reject) => {
+        db.query(`delete from register_user where id='${userid}'`, (err, result) => {
+          if (err) {
+            reject('查数据库出错2')
+          }
+          resolve(result)
+        })
+      })
+      if (deleteInfo) {
+        res.send({
+          code: 200,
+          msg: '退出登录成功',
+          data: deleteInfo
+        })
+      } else {
+        res.cc('清除用户信息失败')
+      }
+    } else {
+      res.cc({
+        msg: '用户未登录'
+      })
+    }
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 module.exports = {
   getRegisterCode,
   getRegister,
-  getLogin,
   getLogout
 }

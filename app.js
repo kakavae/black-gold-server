@@ -4,6 +4,9 @@ const cors = require('cors')
 // 导入验证规则模块的包
 const joi = require('joi')
 
+/* 文章相关模块 */
+const articalRouter = require('./router/artical')
+
 // 导入路由模块---产品条目
 const productRouter = require('./router/category.js')
 // 导入路由模块---请求静态图片
@@ -22,6 +25,8 @@ const userinfo = require('./router/userInfo.js')
 const tradeInfo = require('./router/tradeInfo.js')
 // 导入路由处理模块---获取订单信息的路由
 const paymentInfo = require('./router/paymentInfo.js')
+/* 导入路由处理模块---发表文章 */
+const articalPublishRouter = require('./router/articalPublish')
 
 // 导入解析token的模块
 const { expressjwt } = require('express-jwt')
@@ -53,6 +58,32 @@ app.use(express.json())
 // 以/api开头的请求不需要token认证
 app.use(expressjwt({ secret: config.jwtSecretKey, algorithms: ['HS256'] }).unless({ path: [/^\/api\//] }))
 
+/* 
+  处理文章相关模块----黑金项目
+*/
+app.use('/api/artical', articalRouter)
+
+/* 
+  注册--登录一条龙
+*/
+app.use('/api/user/passport', register)
+
+/* 
+  测试token的解析,获取用户的个人信息 
+*/
+app.use('/my', userinfo)
+
+/*
+  发表文章
+*/
+app.use('/artical', articalPublishRouter)
+
+/* 
+  搜索文章---根据分类标签的字段
+*/
+app.use('/api/list', searchRouter)
+
+/*
 // 1. 注册路由中间件，拿到请求就会先交给路由处理，处理三级联动数据的请求
 app.use('/api', productRouter)
 
@@ -79,6 +110,8 @@ app.use('/my/order', tradeInfo)
 
 // 9. 支付相关的路由
 app.use('/my/payment', paymentInfo)
+*/
+
 
 // 注册全局可用的错误级别的中间件
 app.use((err, req, res, next) => {
