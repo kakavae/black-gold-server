@@ -121,10 +121,14 @@ app.use((err, req, res, next) => {
   }
   // token认证失败后的错误
   if ((err.name = 'UnauthorizedError')) {
+    console.log(req.get('Authorization'))
     return res.send({
       code: 208,
       message: '身份认证失败',
-      data: {},
+      data: {
+        err,
+        msg: req.get('Authorization')
+      },
       ok: false
     })
   }

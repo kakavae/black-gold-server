@@ -131,7 +131,7 @@ const getRegister = async (req, res) => {
   // 拿着发送过来的数据去数据库查找邮箱，如果验证码正确了，就注册成功
   const { email, code } = req.body
   const userId = uuidv4()
-  const userName = 'user' + userId
+  const userName = 'user ' + userId
 
   try {
     // 1. 从已经注册的表里面查看是否有数据，

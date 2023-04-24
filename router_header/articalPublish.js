@@ -21,6 +21,7 @@ const publishArtical = async (req, res) => {
     res.send({
       code: 200,
       msg: '发表文章成功',
+      articalId,
       data: {
         publishResult
       }
