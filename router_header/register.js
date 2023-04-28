@@ -258,6 +258,7 @@ const getLogin = async (req, res) => {
 
 /* 退出登录的接口 */
 /* 退出登录，在数据库表中删除用户的信息，返回成功删除的信息 */
+/* 不能删除，要标记一个字段为0，证明用户没有登录，这样用户的id不会改变，下次会直接用这个id */
 const getLogout = async (req, res) => {
   const userid = req.params.userid
   console.log(userid)

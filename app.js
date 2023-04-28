@@ -70,6 +70,7 @@ app.use('/api/user/passport', register)
 
 /* 
   测试token的解析,获取用户的个人信息 
+  修改个人信息
 */
 app.use('/my', userinfo)
 

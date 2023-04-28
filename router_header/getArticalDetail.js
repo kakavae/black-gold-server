@@ -18,6 +18,20 @@ const getArticalDetail = (req, res) => {
   })
 }
 
+const likeArtical = (req, res) => {
+  res.send({
+    code: 200,
+  })
+}
+
+const commentArtical = (req, res) => {
+  res.send({
+    code: 200
+  })
+}
+
 module.exports = {
-  getArticalDetail: getArticalDetail
+  getArticalDetail: getArticalDetail,
+  likeArtical,
+  commentArtical
 }
