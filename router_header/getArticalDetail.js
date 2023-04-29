@@ -14,7 +14,21 @@ const getArticalDetail = (req, res) => {
         err
       })
     }
-    res.send(result)
+
+    const articalInfo = result[0]
+
+    if (!articalInfo.comments) {
+      articalInfo.comments = []
+    }
+
+    if (!articalInfo.likes) {
+      articalInfo.likes = []
+    }
+
+    res.send({
+      code: 200,
+      data: articalInfo
+    })
   })
 }
 

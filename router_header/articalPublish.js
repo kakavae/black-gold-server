@@ -52,8 +52,9 @@ const likeArtical = async (req, res) => {
     })
 
     /* 2.如果已经点赞的和传过来的人用户名一致，就拒绝点赞，返回点赞失败，已经点过了 */
-    if (likes[0]) {
-      const likesList = likes[0].likes.split('&')
+    // console.log(likes)
+    if (likes[0] && likes[0].likes && likes[0].likes.length > 0) {
+      const likesList = JSON.parse(likes[0].likes)
       for (let item of likesList) {
         if (item === userName) {
           return res.send({
@@ -64,14 +65,15 @@ const likeArtical = async (req, res) => {
       }
     }
 
+    let likeList = []
     if (likes[0].likes) {
-      likes = likes[0].likes + '&'
+      likeList = [...JSON.parse(likes[0].likes), userName]
     } else {
-      likes = ''
+      likeList = [userName]
     }
 
     const resultData = await new Promise((resolve, reject) => {
-      db.query(`update artical_content set likes = '${likes + userName}' where id = '${articalid}'`, (err, result) => {
+      db.query(`update artical_content set likes = '${JSON.stringify(likeList)}' where id = '${articalid}'`, (err, result) => {
         if (err) {
           reject('点赞插入数据库失败')
         } else {
@@ -107,17 +109,18 @@ const commentArtical = async (req, res) => {
       })
     })
 
+    // console.log(commentsData)
     /* 2.将新的值添加到旧的值中 */
     let newCommentsList = commentsData[0].comments
     if (newCommentsList) {
-      newCommentsList = JSON.stringify({
+      newCommentsList = JSON.stringify([
         ...JSON.parse(newCommentsList),
-        [userName]: comment
-      })
+        { [userName]: comment }
+      ])
     } else {
-      newCommentsList = JSON.stringify({
-        [userName]: comment
-      })
+      newCommentsList = JSON.stringify([
+        { [userName]: comment }
+      ])
     }
 
     /* 3.新的评论数据update到数据库中 */
