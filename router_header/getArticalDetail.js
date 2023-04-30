@@ -15,6 +15,15 @@ const getArticalDetail = (req, res) => {
       })
     }
 
+    if (!result[0]) {
+      return res.send({
+        code: 201,
+        msg: {
+          data: '查无此人'
+        }
+      })
+    }
+
     const articalInfo = result[0]
 
     if (!articalInfo.comments) {
