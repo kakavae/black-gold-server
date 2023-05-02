@@ -6,7 +6,8 @@ const dbQuery = (sql) => {
     db.query(sql, (err, result) => {
       if (err) {
         reject({
-          msg: 'sql语句可能错误，数据库操作失败'
+          msg: 'sql语句可能错误，数据库操作失败',
+          err
         })
       } else {
         resolve(result)
