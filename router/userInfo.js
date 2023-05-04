@@ -1,7 +1,7 @@
 const express = require('express')
 // 导入操作数据库的模块
 const db = require('../db/index.js')
-const { getUserinfo, getUserArticalList, editUserinfo } = require('../router_header/userInfo')
+const { getUserinfo, getUserArticalList, editUserinfo, editUserHeader } = require('../router_header/userInfo')
 
 const router = express()
 
@@ -14,5 +14,8 @@ router.get('/user/artical/:userid', getUserArticalList)
 
 /* 拿到用户的id，以及用户需要修改的个人信息，修改用户的个人信息 */
 router.post('/user/edituserinfo', editUserinfo)
+
+/* 修改用户的头像 */
+router.post('/user/edituserinfo/header', editUserHeader)
 
 module.exports = router

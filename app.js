@@ -91,6 +91,12 @@ app.use('/api/list', searchRouter)
 */
 app.use('/pins', pinsPublish)
 
+/* 
+  托管静态资源----前端传递过来每个用户的头像数据
+  托管的资源不能是需要token验证，否则会报跨域的错，application/json格式的跨域不被允许
+*/
+app.use('/api/images', express.static('./router_header/images'))
+
 /*
 // 1. 注册路由中间件，拿到请求就会先交给路由处理，处理三级联动数据的请求
 app.use('/api', productRouter)
