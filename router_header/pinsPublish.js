@@ -8,12 +8,14 @@ const pinsPublish = async (req, res) => {
     id: userId,
     userName,
     userIntroduce: occupation,
-    headerImgUrl
+    imgUrl
   } = req.auth
+
+  // console.log(req.auth)
 
   try {
     /* 存一个时间戳以便于按顺序加载数据 */
-    await dbQuery(`insert into pins_content (id, content, userId, userName, occupation, headerImgUrl, likes, commentImg, time) values ('${id}', '${content ? content : null}', '${userId}', '${userName}', '${occupation ? occupation : null}', '${headerImgUrl ? headerImgUrl : null}', '0', 'null', '${Date.now()}')`)
+    await dbQuery(`insert into pins_content (id, content, userId, userName, occupation, headerImgUrl, likes, commentImg, time) values ('${id}', '${content ? content : null}', '${userId}', '${userName}', '${occupation ? occupation : null}', '${imgUrl ? imgUrl : null}', '0', 'null', '${Date.now()}')`)
 
     const selData = await dbQuery(`select * from pins_content where id = '${id}'`)
     res.send({

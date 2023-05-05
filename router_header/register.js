@@ -189,6 +189,8 @@ const getRegister = async (req, res) => {
         })
       })
 
+      /* 这里应该从用户表里面选出正确id的用户并返回，不然第一次登录后修改用户信息，但是修改后的信息还没有同步到token里面 */
+
       /* 生成token并返回 */
       const user = { userName, email, id: userId }
       const token = jwt.sign(user, config.jwtSecretKey, { expiresIn: config.expiresIn })

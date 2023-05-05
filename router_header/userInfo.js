@@ -81,12 +81,13 @@ const editUserinfo = async (req, res) => {
 
 /* 修改文件名的函数，如果有重名的文件，就删除那个文件，将现在的命名继续 */
 const changeFileName = (oldPath, id, end) => {
-  const newPath = path.join(__dirname, '/images/', id + '.' + end)
-  const imgUrl = SERVER_NAME + '/api/images/' + id + '.' + end
+  let imgName = id + '.' + end
+  let newPath = path.join(__dirname, '/images/', imgName)
+  let imgUrl = SERVER_NAME + '/api/images/' + imgName
   return new Promise(async (resolve, reject) => {
-    /* 1.如果重名就删除之前的文件 */
     let unLinkRes = null
     try {
+      /* 1.如果重名就删除之前的文件---并重命名为新的文件名---新的文件名要和之前的文件名不一致 */
       if (fs.existsSync(newPath)) {
         unLinkRes = await new Promise((resolve, reject) => {
           fs.unlink(newPath, (err, result) => {
@@ -104,8 +105,7 @@ const changeFileName = (oldPath, id, end) => {
       console.log(e)
     }
 
-    /* 2.如果删除成功了 */
-    /* 或者根本没有重名的情况就返回读取图片的url */
+    /* 2.或者根本没有重名的情况就返回读取图片的url */
     fs.rename(oldPath, newPath, (err) => {
       if (err) {
         reject({
@@ -116,7 +116,6 @@ const changeFileName = (oldPath, id, end) => {
         resolve(imgUrl)
       }
     })
-
   })
 }
 

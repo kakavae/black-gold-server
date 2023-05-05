@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid')
 /* 发表文章的逻辑 */
 const publishArtical = async (req, res) => {
   const { title, author, time, reading, content, classification, lesscontent, imgUrl, imgalt, authorHeaderImg, userId } = req.body
+  console.log(imgUrl)
   const articalId = uuidv4()
   /* 将req.body里面的数据以合适的格式存进artical_content表里 */
   try {
@@ -95,14 +96,14 @@ const likeArtical = async (req, res) => {
 const commentArtical = async (req, res) => {
   // console.log(req.body)
   const { id: articalid, comment } = req.body
-  const { userName } = req.auth
+  const { userName, imgUrl } = req.auth
   /* 直接在数据库中存JSON化的数据，得到的返回值直接返回给前端 */
   try {
     /* 1.获取数据库中评论的值 */
     const commentsData = await new Promise((resolve, reject) => {
       db.query(`select comments from artical_content where id = '${articalid}'`, (err, result) => {
         if (err) {
-          reject('点赞插入数据库失败')
+          reject('获取评论并插入数据库失败')
         } else {
           resolve(result)
         }
@@ -115,11 +116,11 @@ const commentArtical = async (req, res) => {
     if (newCommentsList) {
       newCommentsList = JSON.stringify([
         ...JSON.parse(newCommentsList),
-        { [userName]: comment }
+        { [userName]: comment + 'nbsp' + imgUrl }
       ])
     } else {
       newCommentsList = JSON.stringify([
-        { [userName]: comment }
+        { [userName]: comment + 'nbsp' + imgUrl }
       ])
     }
 
