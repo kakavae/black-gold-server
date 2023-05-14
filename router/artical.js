@@ -12,5 +12,4 @@ router.get('/getBaseCategoryList', getArticalList)
 /* 获取文章的详细信息 */
 router.get('/:articalId', getArticalDetail)
 
-
 module.exports = router

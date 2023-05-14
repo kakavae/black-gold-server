@@ -29,6 +29,8 @@ const paymentInfo = require('./router/paymentInfo.js')
 const articalPublishRouter = require('./router/articalPublish')
 /* 导入发表沸点的模块 */
 const pinsPublish = require('./router/pinsPublish')
+/* 导入获取沸点的模块 */
+const getPinsList = require('./router/getPinsList.js')
 
 // 导入解析token的模块
 const { expressjwt } = require('express-jwt')
@@ -85,6 +87,11 @@ app.use('/artical', articalPublishRouter)
   搜索文章---根据分类标签的字段
 */
 app.use('/api/list', searchRouter)
+
+/* 
+  获取所有的沸点
+*/
+app.use('/api/pinslist', getPinsList)
 
 /* 
   发表沸点
